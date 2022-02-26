@@ -80,40 +80,50 @@ class WeatherActivity : AppCompatActivity() {
         placeName.text = viewModel.placeName
         val realtime = weather.realtime
         val daily = weather.daily
+        val realtimeAQI = weather.realtimeAQI
+        val lifeIndex = weather.lifeIndex
         // 填充now.xml布局中的数据
         val currentTempText = "${realtime.temperature.toInt()}℃"
         currentTemp.text = currentTempText
         currentSky.text = getSky(realtime.skycon).info
-        val currentPM25Text = "空气指数 ${realtime.airQuality.aqi.chn.toInt()}"
+        val currentPM25Text = "空气指数 ${realtimeAQI.toInt()}"
         currentAQI.text = currentPM25Text
         nowLayout.setBackgroundResource(getSky(realtime.skycon).bg)
         // 填充forecast.xml布局中的内容
         forecastLayout.removeAllViews()
-        val days = daily.skycon.size
+        val days = daily.daily.size
         for (i in 0 until days) {
-            val skycon = daily.skycon[i]
-            val temperature = daily.temperature[i]
+            val skycon = daily.daily[i].skycon
+            val temperatureMin = daily.daily[i].tempMin
+            val temperatureMax = daily.daily[i].tempMax
             val view = LayoutInflater.from(this).inflate(R.layout.forecast_item,
                 forecastLayout, false)
             val dateInfo = view.findViewById(R.id.dateInfo) as TextView
             val skyIcon = view.findViewById(R.id.skyIcon) as ImageView
             val skyInfo = view.findViewById(R.id.skyInfo) as TextView
             val temperatureInfo = view.findViewById(R.id.temperatureInfo) as TextView
-            val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            dateInfo.text = simpleDateFormat.format(skycon.date)
-            val sky = getSky(skycon.value)
+//            val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            dateInfo.text = daily.daily[i].fxDate
+            val sky = getSky(skycon)
             skyIcon.setImageResource(sky.icon)
             skyInfo.text = sky.info
-            val tempText = "${temperature.min.toInt()} ~ ${temperature.max.toInt()}℃"
+            val tempText = "${temperatureMin.toInt()} ~ ${temperatureMax.toInt()}℃"
             temperatureInfo.text = tempText
             forecastLayout.addView(view)
         }
         // 填充life_index.xml布局中的数据
-        val lifeIndex = daily.lifeIndex
-        coldRiskText.text = lifeIndex.coldRisk[0].desc
-        dressingText.text = lifeIndex.dressing[0].desc
-        ultravioletText.text = lifeIndex.ultraviolet[0].desc
-        carWashingText.text = lifeIndex.carWashing[0].desc
+        for (item in lifeIndex.daily) {
+            when (item.type) {
+                "2" -> carWashingText.text = item.category
+                "3" -> dressingText.text = item.category
+                "5" -> ultravioletText.text = item.category
+                "9" -> coldRiskText.text = item.category
+            }
+        }
+//        coldRiskText.text = lifeIndex.coldRisk[0].desc
+//        dressingText.text = lifeIndex.dressing[0].desc
+//        ultravioletText.text = lifeIndex.ultraviolet[0].desc
+//        carWashingText.text = lifeIndex.carWashing[0].desc
         weatherLayout.visibility = View.VISIBLE
     }
 

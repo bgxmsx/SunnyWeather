@@ -4,11 +4,12 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import com.sunnyweather.android.logic.Repository
-import com.sunnyweather.android.logic.model.Location
+
+data class Coordinate(val lng: String, val lat: String)
 
 class WeatherViewModel : ViewModel() {
 
-    private val locationLiveData = MutableLiveData<Location>()
+    private val locationLiveData = MutableLiveData<Coordinate>()
 
     var locationLng = ""
 
@@ -21,7 +22,7 @@ class WeatherViewModel : ViewModel() {
     }
 
     fun refreshWeather(lng: String, lat: String) {
-        locationLiveData.value = Location(lng, lat)
+        locationLiveData.value = Coordinate(lng, lat)
     }
 
 }

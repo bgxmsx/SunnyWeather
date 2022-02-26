@@ -1,8 +1,9 @@
 package com.sunnyweather.android.logic
 
+import android.util.Log
 import androidx.lifecycle.liveData
 import com.sunnyweather.android.logic.dao.PlaceDao
-import com.sunnyweather.android.logic.model.Place
+import com.sunnyweather.android.logic.model.Location
 import com.sunnyweather.android.logic.model.Weather
 import com.sunnyweather.android.logic.network.SunnyWeatherNetwork
 import kotlinx.coroutines.Dispatchers
@@ -14,15 +15,16 @@ object Repository {
 
     fun searchPlaces(query: String) = fire(Dispatchers.IO) {
         val placeResponse = SunnyWeatherNetwork.searchPlaces(query)
-        if (placeResponse.status == "ok") {
-            val places = placeResponse.places
+        if (placeResponse.code == "200") {
+            val places = placeResponse.location
             Result.success(places)
         } else {
-            Result.failure(RuntimeException("response status is ${placeResponse.status}"))
+            Result.failure(RuntimeException("response code is ${placeResponse.code}"))
         }
     }
 
     fun refreshWeather(lng: String, lat: String) = fire(Dispatchers.IO) {
+        Log.d("TestTestTest", "$lng $lat")
         coroutineScope {
             val deferredRealtime = async {
                 SunnyWeatherNetwork.getRealtimeWeather(lng, lat)
@@ -30,15 +32,28 @@ object Repository {
             val deferredDaily = async {
                 SunnyWeatherNetwork.getDailyWeather(lng, lat)
             }
+            val deferredRealtimeAQI = async {
+                SunnyWeatherNetwork.getRealtimeAQI(lng, lat)
+            }
+            val deferredLifeIndex = async {
+                SunnyWeatherNetwork.getLifeIndex(lng, lat)
+            }
             val realtimeResponse = deferredRealtime.await()
             val dailyResponse = deferredDaily.await()
-            if (realtimeResponse.status == "ok" && dailyResponse.status == "ok") {
-                val weather = Weather(realtimeResponse.result.realtime,
-                    dailyResponse.result.daily)
+            val realtimeAQIResponse = deferredRealtimeAQI.await()
+            val lifeIndexResponse = deferredLifeIndex.await()
+            Log.d("TestTestTest", "${realtimeResponse.code} ${dailyResponse.code} " +
+                    "${realtimeAQIResponse.code} ${lifeIndexResponse.code}")
+            if (realtimeResponse.code == "200" && dailyResponse.code == "200" &&
+                realtimeAQIResponse.code == "200" && lifeIndexResponse.code == "200") {
+                val weather = Weather(realtimeResponse.realtime, dailyResponse,
+                    realtimeAQIResponse.realtime.aqi, lifeIndexResponse)
                 Result.success(weather)
             } else {
-                Result.failure(RuntimeException("realtime response status is ${realtimeResponse
-                    .status}, and daily response status is ${dailyResponse.status}"))
+                Result.failure(RuntimeException("realtime response code is ${realtimeResponse
+                    .code}, daily response code is ${dailyResponse.code}, realtime aqi response " +
+                        "code is ${realtimeAQIResponse.code}, life index response code " +
+                        "is ${lifeIndexResponse.code}"))
             }
         }
     }
@@ -52,7 +67,7 @@ object Repository {
         emit(result)
     }
 
-    fun savePlace(place: Place) = PlaceDao.savePlace(place)
+    fun savePlace(place: Location) = PlaceDao.savePlace(place)
 
     fun getSavedPlace() = PlaceDao.getSavedPlace()
 

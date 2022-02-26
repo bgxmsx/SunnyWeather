@@ -9,17 +9,23 @@ import kotlin.coroutines.suspendCoroutine
 
 object SunnyWeatherNetwork {
 
-    private val placeService = ServiceCreator.create<PlaceService>()
+    private val placeService = ServiceCreator.geoCreate<PlaceService>()
 
     suspend fun searchPlaces(query: String) = placeService.searchPlaces(query).await()
 
     private val weatherService = ServiceCreator.create<WeatherService>()
 
     suspend fun getRealtimeWeather(lng: String, lat: String) =
-        weatherService.getRealtimeWeather(lng, lat).await()
+        weatherService.getRealtimeWeather("$lng,$lat").await()
 
     suspend fun getDailyWeather(lng: String, lat: String) =
-        weatherService.getDailyWeather(lng, lat).await()
+        weatherService.getDailyWeather("$lng,$lat").await()
+
+    suspend fun getRealtimeAQI(lng: String, lat: String) =
+        weatherService.getRealtimeAQI("$lng,$lat").await()
+
+    suspend fun getLifeIndex(lng: String, lat: String) =
+        weatherService.getLifeIndex("$lng,$lat").await()
 
     private suspend fun <T> Call<T>.await(): T {
         return suspendCoroutine { continuation ->

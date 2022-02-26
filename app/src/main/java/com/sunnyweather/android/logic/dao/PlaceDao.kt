@@ -4,19 +4,19 @@ import android.content.Context
 import androidx.core.content.edit
 import com.google.gson.Gson
 import com.sunnyweather.android.SunnyWeatherApplication
-import com.sunnyweather.android.logic.model.Place
+import com.sunnyweather.android.logic.model.Location
 
 object PlaceDao {
 
-    fun savePlace(place: Place) {
+    fun savePlace(place: Location) {
         sharedPreferences().edit {
             putString("place", Gson().toJson(place))
         }
     }
 
-    fun getSavedPlace(): Place {
+    fun getSavedPlace(): Location {
         val placeJson = sharedPreferences().getString("place", "")
-        return Gson().fromJson(placeJson, Place::class.java)
+        return Gson().fromJson(placeJson, Location::class.java)
     }
 
     fun isPlaceSaved() = sharedPreferences().contains("place")
